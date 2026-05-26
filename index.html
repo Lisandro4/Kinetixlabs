@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kinetix Labs - Video Editing App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: #0f3460;
+            padding: 20px;
+            border-right: 1px solid #16213e;
+            overflow-y: auto;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: #00d4ff;
+        }
+
+        .menu {
+            list-style: none;
+        }
+
+        .menu li {
+            margin-bottom: 15px;
+        }
+
+        .menu button {
+            width: 100%;
+            padding: 10px 15px;
+            background: #16213e;
+            border: 1px solid #16213e;
+            color: #eee;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .menu button:hover {
+            background: #1d3557;
+            border-color: #00d4ff;
+            color: #00d4ff;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Toolbar */
+        .toolbar {
+            background: #16213e;
+            padding: 15px 20px;
+            border-bottom: 1px solid #0f3460;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar button {
+            padding: 8px 16px;
+            background: #0f3460;
+            border: 1px solid #00d4ff;
+            color: #00d4ff;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .toolbar button:hover {
+            background: #00d4ff;
+            color: #0f3460;
+        }
+
+        /* Editor Area */
+        .editor-area {
+            flex: 1;
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        /* Preview Window */
+        .preview-window {
+            flex: 1;
+            background: #000;
+            border: 1px solid #16213e;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .preview-window video,
+        .preview-placeholder {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .preview-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 18px;
+        }
+
+        /* Timeline */
+        .timeline-section {
+            height: 200px;
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 4px;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .timeline-label {
+            font-size: 12px;
+            color: #00d4ff;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .timeline-track {
+            background: #0f3460;
+            height: 60px;
+            border: 1px solid #1d3557;
+            border-radius: 2px;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .timeline-clip {
+            position: absolute;
+            background: #00d4ff;
+            height: 100%;
+            opacity: 0.7;
+            cursor: grab;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .timeline-clip:hover {
+            opacity: 1;
+        }
+
+        /* Panel Styles */
+        .side-panel {
+            width: 300px;
+            background: #16213e;
+            border-left: 1px solid #0f3460;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #0f3460;
+            padding-bottom: 10px;
+        }
+
+        .property-group {
+            margin-bottom: 20px;
+        }
+
+        .property-label {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+
+        input[type="range"],
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 6px;
+            background: #0f3460;
+            border: 1px solid #1d3557;
+            color: #00d4ff;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        input[type="range"] {
+            padding: 0;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #16213e;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #0f3460;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00d4ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">⚡ Kinetix Labs</div>
+            <ul class="menu">
+                <li><button onclick="newProject()">📁 New Project</button></li>
+                <li><button onclick="openProject()">📂 Open Project</button></li>
+                <li><button onclick="saveProject()">💾 Save Project</button></li>
+                <li><button onclick="exportVideo()">📤 Export Video</button></li>
+                <li><button onclick="importMedia()">📥 Import Media</button></li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <button onclick="playVideo()">▶ Play</button>
+                <button onclick="pauseVideo()">⏸ Pause</button>
+                <button onclick="stopVideo()">⏹ Stop</button>
+                <button onclick="undoAction()">↶ Undo</button>
+                <button onclick="redoAction()">↷ Redo</button>
+                <button onclick="addTransition()">✨ Add Transition</button>
+                <button onclick="addEffect()">🎬 Add Effect</button>
+            </div>
+
+            <!-- Editor Area -->
+            <div class="editor-area">
+                <!-- Preview Window -->
+                <div class="preview-window">
+                    <video id="previewVideo" controls></video>
+                    <div class="preview-placeholder">No video loaded</div>
+                </div>
+
+                <!-- Properties Panel -->
+                <div class="side-panel">
+                    <div class="panel-title">Properties</div>
+                    
+                    <div class="property-group">
+                        <div class="property-label">Opacity</div>
+                        <input type="range" min="0" max="100" value="100" onchange="updateOpacity(this.value)">
+                    </div>
+
+                    <div class="property-group">
+                        <div class="property-label">Scale</div>
+                        <input type="range" min="50" max="200" value="100" onchange="updateScale(this.value)">
+                    </div>
+
+                    <div class="property-group">
+                        <div class="property-label">Duration (seconds)</div>
+                        <input type="number" min="0.1" step="0.1" value="5">
+                    </div>
+
+                    <div class="property-group">
+                        <div class="property-label">Speed</div>
+                        <input type="range" min="0.25" max="2" step="0.25" value="1">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="timeline-section">
+                <div class="timeline-label">Timeline</div>
+                <div class="timeline-track">
+                    <div class="timeline-clip" style="left: 10px; width: 150px;">Video Clip 1</div>
+                </div>
+                <div class="timeline-track">
+                    <div class="timeline-clip" style="left: 160px; width: 120px;">Audio Track</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Video Control Functions
+        function playVideo() {
+            const video = document.getElementById('previewVideo');
+            if (video.src) video.play();
+            else alert('Please load a video first');
+        }
+
+        function pauseVideo() {
+            const video = document.getElementById('previewVideo');
+            video.pause();
+        }
+
+        function stopVideo() {
+            const video = document.getElementById('previewVideo');
+            video.pause();
+            video.currentTime = 0;
+        }
+
+        // Project Functions
+        function newProject() {
+            alert('New Project - Feature coming soon!');
+        }
+
+        function openProject() {
+            alert('Open Project - Feature coming soon!');
+        }
+
+        function saveProject() {
+            alert('Project saved!');
+        }
+
+        function exportVideo() {
+            alert('Export Video - Feature coming soon!');
+        }
+
+        function importMedia() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'video/*,audio/*,image/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const url = URL.createObjectURL(file);
+                const video = document.getElementById('previewVideo');
+                video.src = url;
+                document.querySelector('.preview-placeholder').style.display = 'none';
+                alert(`Loaded: ${file.name}`);
+            };
+            input.click();
+        }
+
+        // Edit Functions
+        function undoAction() {
+            alert('Undo - Feature coming soon!');
+        }
+
+        function redoAction() {
+            alert('Redo - Feature coming soon!');
+        }
+
+        // Effect/Transition Functions
+        function addTransition() {
+            alert('Add Transition - Feature coming soon!');
+        }
+
+        function addEffect() {
+            alert('Add Effect - Feature coming soon!');
+        }
+
+        // Property Update Functions
+        function updateOpacity(value) {
+            const video = document.getElementById('previewVideo');
+            if (video) video.style.opacity = value / 100;
+        }
+
+        function updateScale(value) {
+            const video = document.getElementById('previewVideo');
+            if (video) video.style.transform = `scale(${value / 100})`;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Kinetix Labs loaded successfully!');
+        });
+    </script>
+</body>
+</html>
